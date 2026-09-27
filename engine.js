@@ -18,7 +18,7 @@ function learn(w,n,e,source='heard',from=null){if(!n||!e)return false;const old=
 function importance(w,n,e){let v=18;if(e.actors.includes(n.id))v+=45;for(const id of e.actors)if(id!==n.id&&n.family.includes(id))v+=20;if(['death','birth','marriage','inheritance','bankruptcy','conflict','loan','secret'].includes(e.type))v+=17;return clamp(v)}
 function person(w,id){return w.people.find(n=>n.id===id)}
 function name(w,id){return person(w,id)?.name||'Bilinmeyen'}
-function textEvent(w,e){if(!e)return 'Bilinmeyen olay';const a=name(w,e.actors[0]),b=name(w,e.actors[1]);const d=e.details;switch(e.type){case 'birth':return `${a} ailesine yeni bir çocuk katıldı: ${b}.`;case 'death':return `${a} hayatını kaybetti.`;case 'marriage':return `${a} ile ${b} evlendi.`;case 'inheritance':return `${a} ile ${b} miras konusunda anlaşmazlık yaşadı.`;case 'loan':return `${b}, ${a} adlı kişiye ${d.amount}$ borç verdi.`;case 'repayment':return `${a}, ${b} adlı kişiye ${d.amount}$ geri ödedi.`;case 'help':return `${a}, ${b} adlı kişiye yardım etti.`;case 'refusal':return `${b}, ${a} adlı kişinin yardım isteğini reddetti.`;case 'conflict':return `${a} ile ${b} tartıştı.`;case 'friendship':return `${a} ile ${b} yakınlaştı.`;case 'gossip':return `${a}, ${b} ile bir haber paylaştı.`;case 'bankruptcy':return `${a} borçlarını ödeyemedi ve mülkünü kaybetti.`;case 'purchase':return `${a}, ${d.asset} satın aldı.`;case 'move':return `${a}, ${d.place} konumuna taşındı.`;case 'illness':return `${a} hastalandı.`;case 'recovery':return `${a} iyileşti.`;case 'work':return `${a} çalışarak ${d.amount}$ kazandı.`;case 'secret':return `${a} bir sırrını ${b} ile paylaştı.`;default:return `${a} ile ilgili bir olay yaşandı.`}}
+function textEvent(w,e){if(!e)return 'Bilinmeyen olay';const a=name(w,e.actors[0]),b=name(w,e.actors[1]);const d=e.details;switch(e.type){case 'birth':return `${a} ailesine yeni bir çocuk katıldı: ${b}.`;case 'death':return `${a} hayatını kaybetti.`;case 'marriage':return `${a} ile ${b} evlendi.`;case 'inheritance':return `${a} ile ${b} miras konusunda anlaşmazlık yaşadı.`;case 'loan':return `${b}, ${a} adlı kişiye ${d.amount}$ borç verdi.`;case 'repayment':return `${a}, ${b} adlı kişiye ${d.amount}$ geri ödedi.`;case 'help':return d.player?`Oyuncu, ${a} adlı kişiye ${d.amount}$ yardım etti.`:`${a}, ${b} adlı kişiye yardım etti.`;case 'refusal':return `${b}, ${a} adlı kişinin yardım isteğini reddetti.`;case 'conflict':return `${a} ile ${b} tartıştı.`;case 'friendship':return `${a} ile ${b} yakınlaştı.`;case 'gossip':return d.player?`Oyuncu, ${a} adlı kişiye bir haber aktardı.`:`${a}, ${b} ile bir haber paylaştı.`;case 'bankruptcy':return `${a} borçlarını ödeyemedi ve mülkünü kaybetti.`;case 'purchase':return `${a}, ${d.asset} satın aldı.`;case 'move':return `${a}, ${d.place} konumuna taşındı.`;case 'illness':return `${a} hastalandı.`;case 'recovery':return `${a} iyileşti.`;case 'work':return `${a} çalışarak ${d.amount}$ kazandı.`;case 'secret':return `${a} bir sırrını ${b} ile paylaştı.`;default:return `${a} ile ilgili bir olay yaşandı.`}}
 function makePerson(w,id,first,last,age,job){const traits={pride:Math.floor(rng(w)*101),kindness:Math.floor(rng(w)*101),sociability:Math.floor(rng(w)*101),openness:Math.floor(rng(w)*101),discipline:Math.floor(rng(w)*101),risk:Math.floor(rng(w)*101)};return{id,name:`${first} ${last}`,first,last,age,job,alive:true,parents:[],partner:null,children:[],family:[],home:'Ev',place:'Ev',money:Math.floor(15+rng(w)*90),debt:0,creditor:null,assets:[],traits,needs:{hunger:15+Math.floor(rng(w)*30),energy:60+Math.floor(rng(w)*40),social:40+Math.floor(rng(w)*50),stress:Math.floor(rng(w)*25),health:85+Math.floor(rng(w)*16)},memory:[],lastAction:'Başlangıç',actionCounts:{},lastContact:{},birthDay:w.day-Math.round(age*365),goal:'',lastDialogue:null}}
 function create(seed=12345,count=10){const w={version:10,seed:seed>>>0,initialSeed:seed>>>0,day:1,hour:8,nextId:0,nextEvent:0,people:[],events:[],relations:{},market:{food:3,wage:5,prosperity:55},metrics:{births:0,deaths:0,marriages:0,loans:0,rumors:0,decisions:0},lastNews:[]};for(let i=0;i<count;i++){const first=i<10?NAMES[i]:pick(w,NAMES),last=i<10?SURNAMES[[0,0,1,1,2,0,0,3,4,4][i]]:pick(w,SURNAMES),age=i<10?[46,43,32,27,51,42,19,35,58,24][i]:18+Math.floor(rng(w)*45),job=i<10?JOBS[[0,1,2,3,4,5,6,7,1,8][i]]:pick(w,JOBS);w.people.push(makePerson(w,w.nextId++,first,last,age,job))}const link=(i,j,type)=>{const a=w.people[i],b=w.people[j];if(!a||!b)return;a.family.push(b.id);b.family.push(a.id);changeRel(w,a,b,type==='dispute'?-22:35,type==='dispute'?-15:30,type==='dispute'?30:0)};link(0,1,'dispute');link(2,3,'sibling');link(0,5,'partner');link(0,6,'parent');link(5,6,'parent');link(8,9,'parent');w.people[0].partner=5;w.people[5].partner=0;w.people[0].children=[6];w.people[5].children=[6];w.people[6].parents=[0,5];w.people[8].children=[9];w.people[9].parents=[8];w.people[0].debt=120;w.people[0].creditor=4;w.people[4].money+=120;w.people[0].assets=['Demirci'];w.people[3].assets=['Fırın'];w.people[4].assets=['Banka'];w.people[7].assets=['Saloon'];const e=addEvent(w,'inheritance',[w.people[0],w.people[1]],{},[w.people[0],w.people[1]]);changeRel(w,w.people[0],w.people[1],-12,-5,12,e.id);for(let i=0;i<count;i++)for(let j=i+1;j<count;j++)if(roll(w,.12))changeRel(w,w.people[i],w.people[j],Math.floor(rng(w)*25),Math.floor(rng(w)*20));return w}
 function candidates(w,n){return w.people.filter(p=>p.alive&&p.id!==n.id)}
@@ -33,34 +33,41 @@ function advance(w,hours){for(let i=0;i<hours;i++)tick(w);return w}
 const TOPICS=['selam','iş','geçmiş','aile','ilişkiler','haber','borç','miras','kasaba'];
 function talk(w,n,topic){if(!n?.alive)return 'Bu kişiyle konuşamazsın.';const known=n.memory.map(m=>({m,e:w.events.find(e=>e.id===m.eventId)})).filter(x=>x.e);const trust=n.lastDialogue?.trust??35;let answer='';switch(topic){case 'selam':answer=pick(w,[`Selam. ${n.place} tarafındayım.`,`Merhaba. ${n.needs.energy<35?'Bugün biraz yorgunum.':'Nasıl gidiyor?'}`,`İyi günler. ${n.needs.stress>65?'Aklım biraz meşgul.':'Kasabada işler sürüyor.'}`]);break;case 'iş':answer=`${n.job} olarak çalışıyorum. ${n.money<12?'Bu aralar geçinmek kolay değil.':n.needs.energy<35?'Bugün epey yoruldum.':'İşler devam ediyor.'}`;break;case 'geçmiş':{const e=known.find(x=>x.e.day<1);answer=e&&n.traits.openness+trust>90?`${textEvent(w,e.e)} ${e.m.source==='witness'?'Bunu yaşadım.':'Bana böyle anlatıldı.'}`:`${n.age} yaşındayım, ${n.job.toLocaleLowerCase('tr-TR')} olarak çalışıyorum. Geçmişimi hemen herkese anlatmam.`;break}case 'aile':answer=n.family.length?`Ailemden ${n.family.slice(0,3).map(id=>name(w,id)).join(', ')} burada. ${n.partner!==null?`Eşim ${name(w,n.partner)}.`:''}`:'Burada yakın ailem yok.';break;case 'ilişkiler':{const links=w.people.filter(p=>p.alive&&p.id!==n.id&&w.relations[pair(n,p)]).sort((a,b)=>relation(w,n,b).affinity-relation(w,n,a).affinity);const p=links[0];answer=p?`${p.name} ile ${relation(w,n,p).affinity>65?'yakınız':relation(w,n,p).affinity<30?'aramız açık':'tanışıyoruz'}.`:'Kasabada henüz yakın olduğum kimse yok.';break}case 'haber':{const item=known.find(x=>x.e.day>=1&&x.e.type!=='gossip');answer=item?`${textEvent(w,item.e)} ${item.m.source==='witness'?'Buna kendim tanık oldum.':`${name(w,item.m.from)} adlı kişiden duydum; doğruluğunu bilmiyorum.`}`:'Yeni bir haber duymadım.';break}case 'borç':answer=n.debt>0&&n.traits.openness+trust>95?`Şu anda ${n.debt}$ borcum var.`:n.debt>0?'Mali durumum hakkında konuşmak istemiyorum.':'Borcumla ilgili anlatacak bir şey yok.';break;case 'miras':{const item=known.find(x=>x.e.type==='inheritance');answer=item?`${textEvent(w,item.e)} ${item.m.source==='witness'?'O olayın içindeydim.':'Bunu başkasından duydum.'}`:'Miras meselesi hakkında bilgim yok.';break}case 'kasaba':answer=`Kasabada ${w.people.filter(x=>x.alive).length} kişi yaşıyor. ${w.market.prosperity<40?'İşler son zamanlarda zor.':'Hayat devam ediyor.'}`;break;default:answer='Bu konuda söyleyecek bir şeyim yok.'}n.lastDialogue={day:w.day,topic,trust:clamp(trust+1)};return `${n.name}: “${answer}”`}
 const PLAYER_CHOICES=['help','ask_secret','share_news','confront'];
-function playerChoice(w,targetId,choice,otherId=null){
+function playerChoice(w,targetId,choice,otherId=null,eventId=null){
  const target=person(w,targetId);
  if(!target?.alive)return{ok:false,message:'Bu kişiyle artık etkileşime geçilemez.'};
  if(!PLAYER_CHOICES.includes(choice))return{ok:false,message:'Bilinmeyen seçim.'};
  if(choice==='help'){
-  const amount=10;if(target.money>=0){target.money+=amount;target.needs.stress=clamp(target.needs.stress-8);
-   const e=addEvent(w,'help',[target],{amount,player:true},[target]);
-   target.playerTrust=clamp((target.playerTrust??40)+12);return{ok:true,message:`${target.name} yardımını kabul etti. 10$ aldı; sana güveni arttı.`,eventId:e.id}}
+  const amount=10;
+  target.money+=amount;target.needs.stress=clamp(target.needs.stress-8);
+  const e=addEvent(w,'help',[target],{amount,player:true},[target]);
+  target.playerTrust=clamp((target.playerTrust??40)+12);
+  return{ok:true,message:`${target.name} yardımını kabul etti. 10$ aldı; sana güveni arttı.`,eventId:e.id};
  }
  if(choice==='ask_secret'){
+  const known=target.memory.map(m=>w.events.find(e=>e.id===m.eventId)).filter(e=>e&&['inheritance','loan','conflict','secret'].includes(e.type));
+  const secret=known[0];
+  if(!secret)return{ok:true,message:`${target.name} paylaşabileceği bir sır bilmediğini söyledi.`};
+  if((w.playerKnowledge||[]).includes(secret.id))return{ok:true,message:`${target.name} bu olayı sana daha önce anlatmıştı.`,eventId:secret.id};
   const chance=clamp(((target.playerTrust??40)+target.traits.openness-target.traits.pride*.35)/170,.05,.9);
-  if(!roll(w,chance)){target.playerTrust=clamp((target.playerTrust??40)-2);return{ok:true,message:`${target.name} sırrını paylaşmak istemedi. Güveni biraz azaldı.`}}
-  const known=target.memory.map(m=>w.events.find(e=>e.id===m.eventId)).filter(e=>e&&e.type!=='gossip');
-  const secret=known.find(e=>e.type==='inheritance'||e.type==='loan'||e.type==='conflict')||known[0];
-  if(!secret)return{ok:true,message:`${target.name} anlatacak bir sırrı olmadığını söyledi.`};
-  w.playerKnowledge=w.playerKnowledge||[];if(!w.playerKnowledge.includes(secret.id))w.playerKnowledge.push(secret.id);
+  if(!roll(w,chance)){target.playerTrust=clamp((target.playerTrust??40)-2);return{ok:true,message:`${target.name} sırrını paylaşmak istemedi. Güveni biraz azaldı.`}};
+  w.playerKnowledge=w.playerKnowledge||[];w.playerKnowledge.push(secret.id);
   target.playerTrust=clamp((target.playerTrust??40)+4);
-  return{ok:true,message:`${target.name} sana anlattı: ${textEvent(w,secret)}`,eventId:secret.id}
+  return{ok:true,message:`${target.name} sana anlattı: ${textEvent(w,secret)}`,eventId:secret.id};
  }
  if(choice==='share_news'){
-  const recipient=person(w,otherId);if(!recipient?.alive||recipient.id===target.id)return{ok:false,message:'Haberi aktaracağın farklı bir kişi seç.'};
-  const ids=w.playerKnowledge||[];const event=ids.map(id=>w.events.find(e=>e.id===id)).find(Boolean);
-  if(!event)return{ok:false,message:'Henüz paylaşabileceğin bir haber bilmiyorsun. Önce bir sır öğren.'};
-  if(!learn(w,recipient,event,'heard',target.id))return{ok:true,message:`${recipient.name} bu haberi zaten biliyor.`};
-  w.metrics.rumors++;const gossip=addEvent(w,'gossip',[target,recipient],{about:event.id,player:true},[target,recipient]);
+  const ids=w.playerKnowledge||[];
+  const event=w.events.find(e=>e.id===eventId&&ids.includes(e.id));
+  if(!event)return{ok:false,message:'Paylaşmak için bildiğin bir haber seç.'};
+  if(target.memory.some(m=>m.eventId===event.id))return{ok:true,message:`${target.name} bu haberi zaten biliyor.`};
+  if(!learn(w,target,event,'heard',null))return{ok:true,message:`${target.name} bu haberi zaten biliyor.`};
+  w.metrics.rumors++;
+  const gossip=addEvent(w,'gossip',[target],{about:event.id,player:true},[target]);
   const implicated=event.actors.map(id=>person(w,id)).filter(n=>n?.alive);
-  for(const n of implicated){n.needs.stress=clamp(n.needs.stress+5);if(n.id===target.id)target.playerTrust=clamp((target.playerTrust??40)-9)}
-  return{ok:true,message:`${recipient.name} haberi öğrendi. Olayın tarafları huzursuz oldu.`,eventId:gossip.id}
+  for(const n of implicated){
+   if(n.id===target.id){n.needs.stress=clamp(n.needs.stress+5);n.playerTrust=clamp((n.playerTrust??40)-8)}
+  }
+  return{ok:true,message:`${target.name} haberi öğrendi. Bu olayda adı geçiyorsa sana güveni azaldı.`,eventId:gossip.id};
  }
  const known=target.memory.map(m=>w.events.find(e=>e.id===m.eventId)).filter(e=>e&&e.type==='inheritance');
  if(!known.length)return{ok:true,message:`${target.name} yüzleşeceğiniz bir miras meselesi bilmediğini söyledi.`};
@@ -70,7 +77,7 @@ function playerChoice(w,targetId,choice,otherId=null){
  const outcome=addEvent(w,success?'friendship':'conflict',[target,opponent],{player:true,about:event.id},[target,opponent]);
  changeRel(w,target,opponent,success?7:-5,success?5:-4,success?-5:8,outcome.id);
  target.playerTrust=clamp((target.playerTrust??40)+(success?5:-3));
- return{ok:true,message:success?`${target.name} ile ${opponent.name} konuşup aralarını yumuşattı.`:`Yüzleşme ${target.name} ile ${opponent.name} arasındaki gerilimi artırdı.`,eventId:outcome.id}
+ return{ok:true,message:success?`${target.name} ile ${opponent.name} konuşup aralarını yumuşattı.`:`Yüzleşme ${target.name} ile ${opponent.name} arasındaki gerilimi artırdı.`,eventId:outcome.id};
 }
 function validate(w){const issues=[],ids=new Set(w.people.map(n=>n.id)),events=new Set(w.events.map(e=>e.id));if(ids.size!==w.people.length)issues.push('Yinelenen NPC kimliği');for(const n of w.people){if(!Number.isFinite(n.money)||n.money<0)issues.push(`${n.id}: geçersiz para`);if(n.debt<0)issues.push(`${n.id}: negatif borç`);for(const id of [...n.parents,...n.children,...n.family])if(!ids.has(id))issues.push(`${n.id}: geçersiz aile bağı`);for(const m of n.memory)if(!events.has(m.eventId))issues.push(`${n.id}: geçersiz hafıza`);if(n.partner!==null&&!ids.has(n.partner))issues.push(`${n.id}: geçersiz eş`)}for(const e of w.events)for(const id of e.actors)if(!ids.has(id))issues.push(`${e.id}: geçersiz aktör`);return issues}
 function stats(w){return{day:w.day,population:w.people.filter(n=>n.alive).length,events:w.events.length,...w.metrics}}
